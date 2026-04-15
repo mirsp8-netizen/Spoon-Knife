@@ -1,20 +1,235 @@
 <!DOCTYPE html>
-
-<html>
+<html lang="ru">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-  <title>Spoon-Knife</title>
-  <LINK href="styles.css" rel="stylesheet" type="text/css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Конструктор промптов | МБОУ ВСОШ №9</title>
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --accent: #3b82f6;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --border: #cbd5e1;
+      --success: #10b981;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
+    .container { max-width: 800px; margin: 0 auto; background: var(--card); padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    h1 { color: var(--primary); margin-bottom: 8px; font-size: 1.8rem; }
+    .subtitle { color: #64748b; margin-bottom: 20px; font-size: 0.95rem; }
+    label { display: block; font-weight: 600; margin: 12px 0 6px; color: #334155; }
+    input, textarea, select {
+      width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px;
+      font-size: 15px; background: #f8fafc; transition: border 0.2s;
+    }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+    textarea { min-height: 80px; resize: vertical; }
+    .preset-row { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; }
+    .btn {
+      background: var(--accent); color: white; border: none; padding: 12px 20px;
+      border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 16px;
+      transition: background 0.2s; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn:hover { background: #2563eb; }
+    .btn-copy { background: #64748b; margin-top: 10px; }
+    .btn-copy:hover { background: #475569; }
+    .output-box {
+      background: #f1f5f9; padding: 16px; border-radius: 8px; margin-top: 16px;
+      border-left: 4px solid var(--accent); position: relative;
+    }
+    #promptOutput {
+      width: 100%; height: 180px; background: transparent; border: none;
+      font-family: monospace; font-size: 14px; resize: none; padding: 0;
+    }
+    .tips { margin-top: 24px; padding: 12px; background: #fef3c7; border-radius: 6px; font-size: 0.9rem; color: #92400e; }
+    .tips strong { display: block; margin-bottom: 4px; }
+    @media (max-width: 600px) {
+      .container { padding: 16px; }
+      h1 { font-size: 1.5rem; }
+    }
+  </style>
 </head>
-
 <body>
+  <div class="container">
+    <h1>🤖 Конструктор промптов</h1>
+    <p class="subtitle">Исследовательский проект «ИИ в школе» | МБОУ ВСОШ №9 | 2026</p>
 
-<img src="forkit.gif" id="octocat" alt="" />
+    <div class="preset-row">
+      <label for="subjectSelect" style="margin:0; white-space: nowrap;">📚 Быстрый старт:</label>
+      <select id="subjectSelect">
+        <option value="">-- Выбрать предмет --</option>
+        <option value="biology">Биология</option>
+        <option value="physics">Физика</option>
+        <option value="math">Математика</option>
+        <option value="russian">Русский язык</option>
+        <option value="social">Обществознание</option>
+        <option value="history">История</option>
+        <option value="chemistry">Химия</option>
+        <option value="english">Английский язык</option>
+      </select>
+    </div>
 
-<!-- Feel free to change this text here -->
-<p>
-  Fork me? Fork you, @octocat!
-</p>
+    <form id="promptForm">
+      <label for="role">🎭 Роль ИИ</label>
+      <input type="text" id="role" placeholder="Например: учитель литературы, научный редактор, репетитор">
 
+      <label for="task">🎯 Задача</label>
+      <textarea id="task" placeholder="Что нужно сделать? (написать, объяснить, составить план, решить...)"></textarea>
+
+      <label for="audience">👥 Аудитория / Класс</label>
+      <input type="text" id="audience" placeholder="Например: 9 класс, подготовка к ОГЭ, уровень B1">
+
+      <label for="structure">📐 Структура ответа</label>
+      <textarea id="structure" placeholder="Перечисли обязательные разделы или пункты"></textarea>
+
+      <label for="style">🎨 Стиль и объём</label>
+      <input type="text" id="style" placeholder="Например: научно-популярный, ~400 слов, без воды">
+
+      <label for="limits">⛔ Ограничения</label>
+      <textarea id="limits" placeholder="Чего избегать? (не выдумывай факты, без сложных терминов, с примерами...)"></textarea>
+
+      <label for="format">📄 Формат вывода</label>
+      <select id="format">
+        <option value="текст">Простой текст</option>
+        <option value="маркированный список">Маркированный список</option>
+        <option value="таблица">Таблица</option>
+        <option value="пошаговая инструкция">Пошаговая инструкция</option>
+        <option value="структура презентации">Структура презентации</option>
+      </select>
+    </form>
+
+    <button class="btn" id="generateBtn">⚡ Сгенерировать промпт</button>
+
+    <div class="output-box">
+      <label style="margin-bottom:8px;">✅ Готовый промпт для копирования:</label>
+      <textarea id="promptOutput" readonly></textarea>
+      <button class="btn btn-copy" id="copyBtn">📋 Копировать в буфер</button>
+    </div>
+
+    <div class="tips">
+      <strong>💡 Правила из эксперимента:</strong>
+      • ИИ не «знает» факты — всегда проверяй даты и источники.<br>
+      • Добавляй свои примеры и критику, чтобы снизить вероятность ИИ-детектора.<br>
+      • Не загружай в чат-боты личные данные и фото одноклассников.
+    </div>
+  </div>
+
+  <script>
+    // Пресеты по предметам (основаны на примерах из вашего проекта)
+    const presets = {
+      biology: {
+        role: "учитель биологии",
+        task: "объяснить тему 'Фотосинтез'",
+        audience: "8 класс",
+        structure: "1) определение, 2) уравнение реакции, 3) значение для природы, 4) пример из жизни",
+        style: "простой, с аналогиями, ~300 слов",
+        limits: "не выдумывай факты, ссылайся на школьный учебник"
+      },
+      physics: {
+        role: "репетитор по физике",
+        task: "помочь решить задачу на закон Ома",
+        audience: "9 класс",
+        structure: "1) формула, 2) подстановка данных, 3) расчёт, 4) ответ с единицами",
+        style: "пошаговый, чёткий, ~250 слов",
+        limits: "показывай единицы измерения, добавь похожую задачу для тренировки"
+      },
+      math: {
+        role: "учитель алгебры",
+        task: "объяснить тему 'Квадратные уравнения'",
+        audience: "8 класс",
+        structure: "1) определение, 2) формула дискриминанта, 3) 3 примера (D>0, D=0, D<0), 4) типичные ошибки",
+        style: "пошаговый, с выделением формул, ~400 слов",
+        limits: "не пропускай шаги вычислений, добавь 2 задачи для самостоятельного решения"
+      },
+      russian: {
+        role: "эксперт ЕГЭ по русскому языку",
+        task: "написать сочинение-рассуждение по тексту [укажи тему]",
+        audience: "10–11 класс",
+        structure: "1) проблема, 2) комментарий с 2 примерами из текста, 3) связь примеров, 4) позиция автора, 5) моя позиция",
+        style: "школьный, аргументированный, 250–300 слов",
+        limits: "избегай клише, используй логические связки, не выдумывай цитаты"
+      },
+      social: {
+        role: "учитель обществознания",
+        task: "написать эссе на тему 'Роль права в обществе'",
+        audience: "10 класс",
+        structure: "1) введение с тезисом, 2) аргумент 'за' с примером из РФ, 3) контраргумент, 4) опровержение, 5) вывод",
+        style: "научно-популярный, ~350 слов",
+        limits: "укажи реальные статьи Конституции или законы, не обобщай без оснований"
+      },
+      history: {
+        role: "учитель истории",
+        task: "подготовить конспект по теме 'Петровские преобразования'",
+        audience: "9 класс (подготовка к ОГЭ)",
+        structure: "1) таблица реформ (сфера, содержание, год, значение), 2) 5 ключевых дат, 3) 3 причинно-следственные связи",
+        style: "краткий, тезисный, удобный для запоминания",
+        limits: "не выдумывай даты, сверяй с учебником, выдели ключевые термины"
+      },
+      chemistry: {
+        role: "учитель химии",
+        task: "объяснить тему 'Типы химических реакций'",
+        audience: "8 класс",
+        structure: "1) определение, 2) 4 типа реакций с уравнениями-примерами, 3) признаки реакций, 4) 2 задачи на составление уравнений",
+        style: "наглядный, с выделением формул, ~400 слов",
+        limits: "показывай коэффициенты, не используй сложные термины без пояснений"
+      },
+      english: {
+        role: "English tutor",
+        task: "help write an essay on topic 'My Dream Job'",
+        audience: "B1 level (9–10 класс)",
+        structure: "1) introduction, 2) main body (what I will do, why it's interesting), 3) conclusion",
+        style: "B1 vocabulary, ~200 words",
+        limits: "highlight useful phrases I can memorize, avoid overly complex grammar"
+      }
+    };
+
+    const subjectSelect = document.getElementById('subjectSelect');
+    const fields = ['role', 'task', 'audience', 'structure', 'style', 'limits', 'format'];
+    const formInputs = fields.map(id => document.getElementById(id));
+
+    // Автозаполнение при выборе предмета
+    subjectSelect.addEventListener('change', function() {
+      const p = presets[this.value];
+      if (!p) return;
+      formInputs[0].value = p.role;
+      formInputs[1].value = p.task;
+      formInputs[2].value = p.audience;
+      formInputs[3].value = p.structure;
+      formInputs[4].value = p.style;
+      formInputs[5].value = p.limits;
+      // format оставляем как есть или можно добавить в пресет
+    });
+
+    // Генерация промпта
+    document.getElementById('generateBtn').addEventListener('click', () => {
+      const [role, task, audience, structure, style, limits, format] = formInputs.map(i => i.value.trim());
+      if (!role || !task) {
+        alert('⚠️ Заполни хотя бы «Роль» и «Задачу»');
+        return;
+      }
+
+      const prompt = `Ты — ${role}. Помоги мне ${task} для ${audience || "школьного уровня"}.
+Включи следующие разделы: ${structure || "по твоему выбору"}.
+Стиль: ${style || "понятный, без воды"}. Объём: ~указано выше.
+Ограничения: ${limits || "без сложных терминов, с примерами, без выдуманных данных"}.
+Если точных данных нет — честно укажи это.
+Ответ оформи в виде ${format}.`;
+
+      document.getElementById('promptOutput').value = prompt;
+    });
+
+    // Копирование
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      const out = document.getElementById('promptOutput');
+      out.select();
+      document.execCommand('copy');
+      const btn = document.getElementById('copyBtn');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '✅ Скопировано!';
+      setTimeout(() => btn.innerHTML = orig, 2000);
+    });
+  </script>
 </body>
 </html>
